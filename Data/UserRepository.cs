@@ -1,8 +1,6 @@
-﻿using System.Runtime.CompilerServices;
-using AutoMapper;
+﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
-using SQLitePCL;
 
 namespace API;
 
@@ -11,9 +9,10 @@ public class UserRepository : IUserRepository
     private readonly DataContext _context;
     private readonly IMapper _mapper;
     
-    public UserRepository(DataContext context)
+    public UserRepository(DataContext context, IMapper mapper)
     {
         _context = context;
+        _mapper = mapper;
     }
     public async Task<MemberDto> GetMemberAsync(string username)
     {
