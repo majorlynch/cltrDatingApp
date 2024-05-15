@@ -22,6 +22,7 @@ public class UsersController : BaseApiController
     [HttpGet]
     public async Task<ActionResult<PagedList<MemberDto>>> GetUsers([FromQuery]UserParams userParams)
     {
+        
         var users = await _userRepository.GetMembersAsync(userParams);
 
         Response.AddPaginationHeader(new PaginationHeader(users.CurrentPage, users.PageSize,
