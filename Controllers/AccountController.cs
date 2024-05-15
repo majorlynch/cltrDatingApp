@@ -1,6 +1,9 @@
-﻿using System.Net.Mime;
+﻿using System.Data;
+using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text;
+using API.DTOs;
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,36 +14,46 @@ public class AccountController : BaseApiController
 {
     private readonly DataContext _context;
     private readonly ITokenService _tokenService;
+    private readonly IMapper _mapper;
 
-    public AccountController(DataContext context, ITokenService tokenService)
+    public AccountController(DataContext context, ITokenService tokenService, IMapper mapper)
     {
         _tokenService = tokenService;
         _context = context;
+        _mapper = mapper;
     } 
-
-    [HttpPost("register")] //POST: api/account/register
+    [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
     {
-        if (await userExists(registerDto.Username))
-            return BadRequest("Username is taken");
+        if (await UserExists(registerDto.Username)) return BadRequest("Username is taken");
 
-        using var hmac = new HMACSHA512();
+        var user = _mapper.Map<AppUser>(registerDto);
 
-        var user = new AppUser
-        {
-            UserName = registerDto.Username.ToLower(),
-            PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
-            PasswordSalt = hmac.Key
-        };
+        user.UserName = registerDto.Username.ToLower();
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
+        //var result = await _userManager.CreateAsync(user, registerDto.Password);
+
+        //if (!result.Succeeded) return BadRequest(result.Errors);
+
+        //var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+ 
+        //if (!roleResult.Succeeded) return BadRequest(result.Errors);
+
         return new UserDto
         {
             Username = user.UserName,
-            Token = _tokenService.CreateToken(user)
+            Token = _tokenService.CreateToken(user),
+            KnownAs = user.KnownAs,
+            Gender = user.Gender
         };
+    }
+
+    private async Task<bool> UserExists(string username)
+    {
+        throw new NotImplementedException();
     }
 
     [HttpPost("login")]
